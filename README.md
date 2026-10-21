@@ -1,4 +1,4 @@
-# SportSlot — Flask + SQLite
+# SPORTVLU
 
 Website tìm và đặt sân cầu lông, pickleball. Giao diện được dựng từ Jinja templates và CSS hiện có; dữ liệu tài khoản, sân và lịch đặt lưu trong `sportslot.db`.
 
