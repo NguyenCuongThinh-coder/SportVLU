@@ -31,14 +31,14 @@ Có thể chọn database riêng bằng `SPORTSLOT_DB_PATH`; mặc định ứng
 
 ## Chuẩn bị deploy lên Render
 
-Repository có `render.yaml` để tạo một Render Web Service chạy Gunicorn, một worker và SQLite trên persistent disk tại `/var/data/sportslot.db`. Cấu hình persistent disk yêu cầu compute plan trả phí trên Render. Chỉ tạo service sau khi đã xem và chấp thuận chi phí trong Render Dashboard; không có service nào được tạo tự động khi chỉ thêm file này vào Git.
+Repository có `render.yaml` để tạo Render Web Service trên gói Free, chạy Gunicorn một worker và SQLite tại `/tmp/sportslot.db`. Cấu hình này dành cho demo, không cần dịch vụ trả phí và không tạo dịch vụ chỉ bằng việc thêm file vào Git.
 
-1. Tạo repository GitHub riêng tư hoặc công khai theo nhu cầu, đẩy source lên nhánh `main` rồi kết nối repository đó với Render bằng Blueprint (`render.yaml`). Không thêm `sportslot.db`, file `.bak`, `.env`, mật khẩu hay khóa SMTP vào Git.
-2. Render tạo secret ổn định từ cấu hình Blueprint. Ứng dụng production từ chối khởi động nếu thiếu `SPORTSLOT_SECRET_KEY`, `SPORTSLOT_DB_PATH` hoặc database hiện hữu; cookie phiên tự bật `Secure`. Production không tự tạo 40 sân demo.
-3. Database local hiện không được đẩy lên Git. Để nhập dữ liệu hiện tại, đặt tạm `SPORTSLOT_ALLOW_EMPTY_DB=1` trong Environment của service để khởi động lần đầu trên disk rỗng; chưa chia sẻ URL cho người dùng. Sao lưu database local, chuyển file vào `/var/data/sportslot.db` bằng SCP/SFTP theo hướng dẫn trong Render Dashboard, rồi gỡ biến tạm này và khởi động lại. Kiểm tra số users/courts/bookings trước khi mở website. Giữ nguyên database local và các file `.bak` làm bản dự phòng. Nếu muốn một database mới hoàn toàn, chỉ bật biến tạm này khi đã quyết định không cần nhập dữ liệu local.
-4. Sau khi chuyển database, kiểm tra đăng nhập, trang chủ, đặt sân và quyền chủ sân trên URL HTTPS của Render. Nếu bật email, bổ sung các biến `SPORTSLOT_SMTP_*` trong Dashboard; SMTP outbound ở các cổng 25/465/587 bị chặn trên free web service của Render.
+1. Đẩy source lên nhánh `main` rồi kết nối repository với Render bằng Blueprint (`render.yaml`). Không thêm `sportslot.db`, file `.bak`, `.env`, mật khẩu hay khóa SMTP vào Git.
+2. Render sinh `SPORTSLOT_SECRET_KEY`; cookie phiên tự bật `Secure`. `SPORTSLOT_ALLOW_EMPTY_DB=1` cho phép ứng dụng tạo database mới và `SPORTSLOT_SEED_DEMO=1` thêm 40 sân mẫu khi database trống. Tài khoản khách/chủ sân có thể đăng ký trên website.
+3. Trong form tạo service, xác nhận instance là **Free ($0/month)**. Nếu tạo service thủ công thay vì Blueprint, dùng build command `pip install -r requirements.txt`, start command `gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 60`, và đặt các biến `SPORTSLOT_ENV=production`, `SPORTSLOT_SECRET_KEY` (secret ngẫu nhiên), `SPORTSLOT_DB_PATH=/tmp/sportslot.db`, `SPORTSLOT_ALLOW_EMPTY_DB=1`, `SPORTSLOT_SEED_DEMO=1`.
+4. Sau deploy, kiểm tra đăng ký/đăng nhập, trang chủ, đặt sân và quyền chủ sân trên URL HTTPS của Render. Dữ liệu SQLite trên Free là tạm thời: có thể mất khi service ngủ, khởi động lại hoặc deploy lại. Khi filesystem được làm mới, database và 40 sân demo được tạo lại; tài khoản và đơn đặt do người dùng tạo trước đó không được khôi phục. Không dùng bản demo này cho dữ liệu thật.
 
-SQLite trên persistent disk chỉ dùng được với một service instance; Blueprint đặt một Gunicorn worker. Disk giữ dữ liệu qua deploy/restart nhưng mỗi deploy có một khoảng ngừng ngắn. Nếu cần scale nhiều instance, hãy chuyển dữ liệu sang database quản lý như PostgreSQL trước.
+Free web service có thể ngủ sau thời gian không hoạt động và lần truy cập kế tiếp sẽ mất thời gian khởi động. SMTP outbound ở các cổng 25/465/587 bị chặn trên Render Free, nên tính năng gửi email có thể không hoạt động từ service này. Render Free phù hợp để trình diễn/thử nghiệm, không phải dịch vụ production cần lưu dữ liệu ổn định.
 
 Các biến email tùy chọn có trong `.env.example`. Không điền thông tin bí mật vào file mẫu; đặt secret trực tiếp trong Render Environment.
 

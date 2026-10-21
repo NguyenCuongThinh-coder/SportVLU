@@ -2,21 +2,21 @@ services:
   - type: web
     name: sportvlu
     runtime: python
-    plan: 0.5c-512mb
+    plan: free
     region: singapore
     branch: main
     autoDeployTrigger: commit
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 60
     healthCheckPath: /
-    disk:
-      name: sportvlu-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: SPORTSLOT_ENV
         value: production
       - key: SPORTSLOT_SECRET_KEY
         generateValue: true
       - key: SPORTSLOT_DB_PATH
-        value: /var/data/sportslot.db
+        value: /tmp/sportslot.db
+      - key: SPORTSLOT_ALLOW_EMPTY_DB
+        value: "1"
+      - key: SPORTSLOT_SEED_DEMO
+        value: "1"

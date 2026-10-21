@@ -19,7 +19,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=(cookie_secure == '1') if cookie_secure is not None else IS_PRODUCTION,
 )
 if IS_PRODUCTION and not os.environ.get('SPORTSLOT_DB_PATH'):
-    raise RuntimeError('SPORTSLOT_DB_PATH must point to persistent storage in production.')
+    raise RuntimeError('SPORTSLOT_DB_PATH must be set in production.')
 DB_PATH = os.environ.get('SPORTSLOT_DB_PATH', os.path.join(os.path.dirname(__file__), 'sportslot.db'))
 if IS_PRODUCTION and not os.path.isfile(DB_PATH) and os.environ.get('SPORTSLOT_ALLOW_EMPTY_DB') != '1':
     raise RuntimeError(
@@ -112,7 +112,8 @@ def init_db():
         )''')
         c.execute('CREATE INDEX IF NOT EXISTS idx_password_reset_user ON password_reset_tokens(user_id,expires_at)')
         count=c.execute('SELECT COUNT(*) FROM courts').fetchone()[0]
-        if count==0 and not IS_PRODUCTION:
+        seed_demo_courts = not IS_PRODUCTION or os.environ.get('SPORTSLOT_SEED_DEMO') == '1'
+        if count==0 and seed_demo_courts:
             c.executemany('INSERT INTO courts(name,sport,area,price,lat,lng,description) VALUES(?,?,?,?,?,?,?)',SEED_COURTS)
 
 def current_user():
