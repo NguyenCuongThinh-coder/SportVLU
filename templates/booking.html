@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Đặt sân — SportVLU{% endblock %}
+{% block content %}
+<main class="page booking-page"><div class="shell narrow">
+  <a class="back-link" href="{{ url_for('court_detail', court_id=court.id) }}">← Quay lại chi tiết sân</a>
+  <div class="progress"><div class="done"><span>✓</span><b>Chọn sân</b></div><i></i><div class="active"><span>2</span><b>Thông tin đặt sân</b></div><i></i><div><span>3</span><b>Chờ xác nhận</b></div></div>
+  <div class="booking-layout">
+    <form class="form-card" method="post" action="{{ url_for('book', court_id=court.id) }}" data-availability-url="{{ url_for('court_availability', court_id=court.id) }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <div class="form-heading"><span class="form-icon">▦</span><div><h1>Thông tin đặt sân</h1><p>Điền thông tin để gửi yêu cầu đến chủ sân.</p></div></div>
+      <div class="form-section"><h2>Thông tin người đặt</h2><div class="form-grid two-col">
+        <label class="field"><span>Họ và tên *</span><input name="customer_name" required maxlength="100" value="{{ request.form.get('customer_name', user.name) }}"></label>
+        <label class="field"><span>Số điện thoại *</span><input name="phone" type="tel" required value="{{ request.form.get('phone', user.phone or '') }}"></label>
+      </div></div>
+      <div class="form-section"><h2>Thời gian chơi</h2><div class="form-grid two-col">
+        <label class="field"><span>Ngày chơi *</span><input id="play-date" name="play_date" type="date" min="{{ today }}" value="{{ request.form.get('play_date', '') }}" required></label>
+        <label class="field"><span>Khung giờ *</span><select id="time-slot" name="time_slot" required><option value="">Chọn khung giờ</option>{% for slot in ['06:00–07:00', '07:00–08:00', '08:00–09:00', '09:00–10:00', '10:00–11:00', '11:00–12:00', '13:00–14:00', '14:00–15:00', '15:00–16:00', '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00', '20:00–21:00', '21:00–22:00'] %}<option value="{{ slot }}" {% if request.form.get('time_slot') == slot %}selected{% endif %}>{{ slot }}</option>{% endfor %}</select><small id="availability-message" aria-live="polite">Chọn ngày để xem khung giờ còn trống.</small></label>
+      </div></div>
+      <div class="form-section"><label class="field"><span>Ghi chú cho chủ sân</span><textarea name="note" rows="4" placeholder="Yêu cầu thêm (không bắt buộc)">{{ request.form.get('note', '') }}</textarea></label></div>
+      <div class="info-box booking-disclaimer"><span>ⓘ</span><p>Gửi yêu cầu chưa đồng nghĩa với việc sân đã xác nhận. Hệ thống sẽ kiểm tra trùng lịch trước khi lưu.</p></div>
+      <button class="btn btn-primary full" type="submit">Gửi yêu cầu đặt sân →</button>
+    </form>
+    <aside class="order-card"><h2>Tóm tắt sân</h2><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa {{ court.sport }}"><span class="sport-pill static">{{ court.sport }}</span><h3>{{ court.name }}</h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p><div class="order-details"><div><span>Giá tham khảo</span><b>{{ court.price }}đ/giờ</b></div><div><span>Trạng thái</span><b>Chờ chủ sân xác nhận</b></div></div><div class="info-box"><span>✓</span><p>Không thu thanh toán trên website. Chủ sân sẽ cập nhật trạng thái yêu cầu.</p></div></aside>
+  </div>
+</div></main>
+{% endblock %}
+{% block scripts %}
+<script>
+  const bookingForm = document.querySelector('[data-availability-url]');
+  const playDateInput = document.getElementById('play-date');
+  const timeSlotSelect = document.getElementById('time-slot');
+  const availabilityMessage = document.getElementById('availability-message');
+
+  async function refreshAvailability() {
+    if (!playDateInput.value) {
+      for (const option of timeSlotSelect.options) {
+        if (!option.value) continue;
+        option.disabled = false;
+        option.textContent = option.value;
+      }
+      availabilityMessage.textContent = 'Chọn ngày để xem khung giờ còn trống.';
+      return;
+    }
+    for (const option of timeSlotSelect.options) {
+      if (!option.value) continue;
+      option.disabled = false;
+      option.textContent = option.value;
+    }
+    timeSlotSelect.disabled = true;
+    availabilityMessage.textContent = 'Đang kiểm tra khung giờ…';
+    try {
+      const url = new URL(bookingForm.dataset.availabilityUrl, window.location.origin);
+      url.searchParams.set('date', playDateInput.value);
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Không thể kiểm tra lịch sân.');
+      for (const option of timeSlotSelect.options) {
+        if (!option.value) continue;
+        option.disabled = data.booked_slots.includes(option.value);
+        option.textContent = option.disabled ? `${option.value} · Đã có người đặt` : option.value;
+      }
+      if (timeSlotSelect.selectedOptions[0]?.disabled) timeSlotSelect.value = '';
+      availabilityMessage.textContent = data.available_slots.length
+        ? `Còn ${data.available_slots.length} khung giờ trống.`
+        : 'Ngày này đã kín lịch. Vui lòng chọn ngày khác.';
+    } catch (error) {
+      availabilityMessage.textContent = error.message || 'Không kiểm tra được lịch. Hệ thống vẫn kiểm tra lại khi gửi yêu cầu.';
+    } finally {
+      timeSlotSelect.disabled = false;
+    }
+  }
+
+  playDateInput.addEventListener('change', refreshAvailability);
+  if (playDateInput.value) refreshAvailability();
+</script>
+{% endblock %}

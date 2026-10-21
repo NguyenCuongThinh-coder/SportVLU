@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý sân — SportVLU{% endblock %}
+{% block content %}
+<div class="owner-shell">
+  <aside class="sidebar">
+    <a class="logo-button" href="{{ url_for('index') }}"><img class="brand-logo" src="{{ url_for('static', filename='images/logo-vlu.png') }}" alt="Đại học Văn Lang"></a>
+    <nav>
+      <span>ĐIỀU HƯỚNG</span><a href="{{ url_for('index') }}">⌂ Trang chủ</a><a href="{{ url_for('courts') }}">⌕ Tìm sân</a>
+      <span>TỔNG QUAN</span><a class="active" href="{{ url_for('owner_dashboard') }}">▦ Bảng điều khiển</a>
+      <span>QUẢN LÝ</span><a href="#my-courts">⌂ Sân của tôi</a><a href="#booking-requests">▤ Lịch đặt</a>
+      <span>TÀI KHOẢN</span>
+      <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button type="submit">↪ Đăng xuất</button></form>
+    </nav>
+    <div class="sidebar-help"><b>Quản lý sân</b><p>Cập nhật thông tin địa điểm và phản hồi yêu cầu đặt sân.</p></div>
+  </aside>
+  <div class="owner-main">
+    <div class="owner-top">
+      <div class="mobile-owner-logo"><a class="logo-button" href="{{ url_for('index') }}"><img class="brand-logo" src="{{ url_for('static', filename='images/logo-vlu.png') }}" alt="Đại học Văn Lang"></a></div>
+      <a class="owner-mobile-courts" href="{{ url_for('courts') }}">Tìm sân</a>
+      <a class="owner-profile" href="{{ url_for('profile') }}"><span>{{ current_user.name[:2]|upper }}</span><div><b>{{ current_user.name }}</b><small>Chủ sân · Hồ sơ</small></div></a>
+      <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-secondary btn-small" type="submit">Đăng xuất</button></form>
+    </div>
+    <main class="owner-content">
+      <div class="owner-heading"><div><p>QUẢN LÝ ĐỊA ĐIỂM</p><h1>Xin chào, {{ current_user.name }}</h1><span>Tổng quan yêu cầu đặt và các sân do bạn quản lý.</span></div><a class="btn btn-primary" href="#add-court">＋ Thêm sân mới</a></div>
+      <div class="owner-stats">
+        <a class="owner-stat-link" href="{{ url_for('owner_dashboard', _anchor='my-courts') }}"><span class="stat-icon green">⌂</span><p>Sân do bạn quản lý<strong>{{ courts|length }}</strong></p></a>
+        <a class="owner-stat-link" href="{{ url_for('owner_dashboard', status='pending', _anchor='booking-requests') }}"><span class="stat-icon amber">◷</span><p>Chờ xác nhận<strong>{{ bookings|selectattr('status', 'equalto', 'pending')|list|length }}</strong></p></a>
+        <a class="owner-stat-link" href="{{ url_for('owner_dashboard', _anchor='booking-requests') }}"><span class="stat-icon blue">▤</span><p>Yêu cầu đang hiển thị<strong>{{ bookings|length }}</strong></p></a>
+        <a class="owner-stat-link" href="{{ url_for('profile') }}"><span class="stat-icon purple">@</span><p>Tài khoản<strong class="owner-email">{{ current_user.email }}</strong></p></a>
+      </div>
+      <section class="owner-card owner-form-card" id="add-court">
+        <div class="owner-card-head"><div><h2>Thêm sân mới</h2><p>Thông tin này sẽ được lưu vào danh sách sân.</p></div></div>
+        <form class="owner-form" method="post" action="{{ url_for('add_court') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+          <div class="form-grid two-col">
+            <label class="field"><span>Tên sân *</span><input name="name" required maxlength="150"></label>
+            <label class="field"><span>Môn thể thao *</span><select name="sport" required><option>Cầu lông</option><option>Pickleball</option></select></label>
+            <label class="field"><span>Khu vực *</span><input name="area" required maxlength="120"></label>
+            <label class="field"><span>Giá mỗi giờ *</span><input name="price" required inputmode="numeric" placeholder="120.000"></label>
+            <label class="field"><span>Vĩ độ</span><input name="lat" type="number" step="any" min="-90" max="90"></label>
+            <label class="field"><span>Kinh độ</span><input name="lng" type="number" step="any" min="-180" max="180"></label>
+          </div>
+          <label class="field"><span>Mô tả</span><textarea name="description" rows="3" maxlength="1000"></textarea></label>
+          <button class="btn btn-primary" type="submit">＋ Thêm sân</button>
+        </form>
+      </section>
+      <section class="owner-card court-management" id="my-courts">
+        <div class="owner-card-head court-management-head">
+          <div><h2>Sân do bạn quản lý</h2><p>Sân ngừng kinh doanh vẫn giữ nguyên lịch sử đặt sân.</p><small class="court-count">Tổng số sân: <b>{{ courts|length }}</b></small></div>
+          <button class="btn btn-secondary btn-small court-list-toggle" id="court-list-toggle" type="button" aria-controls="court-list-content" aria-expanded="true" data-collapse-label="Thu gọn" data-expand-label="Mở rộng"><span class="court-toggle-icon" aria-hidden="true">−</span><span class="court-toggle-label">Thu gọn</span></button>
+        </div>
+        <div class="court-list-collapse" id="court-list-content" aria-hidden="false">
+          <div class="court-list-inner">
+            <div class="table-wrap court-list-scroll"><table><thead><tr><th>Tên sân</th><th>Môn</th><th>Khu vực</th><th>Giá/giờ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+          {% for c in courts %}
+          <tr>
+            <td><a href="{{ url_for('court_detail', court_id=c.id) }}"><b>{{ c.name }}</b></a></td><td>{{ c.sport }}</td><td>{{ c.area }}</td><td>{{ c.price }}đ</td>
+            <td>{{ 'Đang kinh doanh' if c.is_active else 'Ngừng kinh doanh' }}</td>
+            <td><div class="table-actions owner-court-actions">
+              <details class="court-edit"><summary class="btn btn-secondary btn-small">Sửa</summary>
+                <form class="owner-form" method="post" action="{{ url_for('edit_court', court_id=c.id) }}">
+                  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                  <div class="form-grid two-col">
+                    <label class="field"><span>Tên sân *</span><input name="name" value="{{ c.name }}" required maxlength="150"></label>
+                    <label class="field"><span>Môn thể thao *</span><select name="sport"><option {% if c.sport == 'Cầu lông' %}selected{% endif %}>Cầu lông</option><option {% if c.sport == 'Pickleball' %}selected{% endif %}>Pickleball</option></select></label>
+                    <label class="field"><span>Khu vực *</span><input name="area" value="{{ c.area }}" required maxlength="120"></label>
+                    <label class="field"><span>Giá mỗi giờ *</span><input name="price" value="{{ c.price }}" required inputmode="numeric"></label>
+                    <label class="field"><span>Vĩ độ</span><input name="lat" type="number" step="any" min="-90" max="90" value="{{ c.lat if c.lat is not none else '' }}"></label>
+                    <label class="field"><span>Kinh độ</span><input name="lng" type="number" step="any" min="-180" max="180" value="{{ c.lng if c.lng is not none else '' }}"></label>
+                  </div>
+                  <label class="field"><span>Mô tả</span><textarea name="description" rows="2" maxlength="1000">{{ c.description or '' }}</textarea></label>
+                  <button class="btn btn-primary btn-small" type="submit">Lưu thay đổi</button>
+                </form>
+              </details>
+              {% if c.is_active %}
+              <form method="post" action="{{ url_for('delete_court', court_id=c.id) }}" onsubmit="return confirm('Ngừng nhận đặt sân này? Lịch sử sẽ được giữ lại.')"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-danger btn-small" type="submit">Ngừng kinh doanh</button></form>
+              {% else %}
+              <form method="post" action="{{ url_for('activate_court', court_id=c.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-secondary btn-small" type="submit">Mở lại</button></form>
+              {% endif %}
+            </div></td>
+          </tr>
+          {% else %}<tr><td colspan="6" class="table-empty">Bạn chưa thêm sân nào.</td></tr>{% endfor %}
+            </tbody></table></div>
+          </div>
+        </div>
+      </section>
+      <section class="owner-card" id="booking-requests">
+        <div class="owner-card-head"><div><h2>Yêu cầu đặt sân</h2><p>Chỉ hiển thị đơn trên sân do bạn quản lý.</p></div>
+          <form method="get" action="{{ url_for('owner_dashboard') }}" class="owner-booking-filters">
+            <select name="status" aria-label="Lọc trạng thái"><option value="">Tất cả trạng thái</option><option value="pending" {% if status == 'pending' %}selected{% endif %}>Chờ xác nhận</option><option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>Đã xác nhận</option><option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Bị từ chối</option><option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Khách đã hủy</option><option value="completed" {% if status == 'completed' %}selected{% endif %}>Đã hoàn thành</option></select>
+            <input type="date" name="play_date" value="{{ play_date }}" aria-label="Lọc ngày chơi"><button class="btn btn-secondary btn-small" type="submit">Lọc</button>
+          </form>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Mã đặt</th><th>Người đặt</th><th>Sân</th><th>Ngày &amp; giờ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+          {% for b in bookings %}
+          <tr><td><b>SS{{ '%05d'|format(b.id) }}</b></td><td><b>{{ b.customer_name }}</b><small>{{ b.player_email }} · {{ b.phone }}</small></td><td><b>{{ b.court_name }}</b><small>{{ b.sport }} · {{ b.area }}</small></td><td><b>{{ b.play_date }}</b><small>{{ b.time_slot }}</small></td><td><span class="status status-{{ b.status }}"><i></i>{{ {'pending':'Chờ xác nhận','confirmed':'Đã xác nhận','rejected':'Bị chủ sân từ chối','cancelled':'Khách đã hủy','completed':'Đã hoàn thành'}[b.status] }}</span></td><td>
+            <div class="booking-row-actions">
+              <details class="booking-detail"><summary class="btn btn-secondary btn-small">Chi tiết</summary><div class="booking-detail-panel"><b>{{ b.customer_name }}</b><span>{{ b.player_email }}</span><span>Điện thoại: {{ b.phone }}</span><span>Ngày chơi: {{ b.play_date }} · {{ b.time_slot }}</span><span>Gửi lúc: {{ b.created_at }}</span>{% if b.note %}<p>Ghi chú: {{ b.note }}</p>{% endif %}</div></details>
+              {% if b.status == 'pending' %}<div class="table-actions"><form method="post" action="{{ url_for('owner_booking_action', booking_id=b.id, action='confirm') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="approve" type="submit" aria-label="Xác nhận">✓</button></form><form method="post" action="{{ url_for('owner_booking_action', booking_id=b.id, action='reject') }}" onsubmit="return confirm('Từ chối yêu cầu đặt sân này?')"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="reject" type="submit" aria-label="Từ chối yêu cầu">×</button></form></div>{% elif b.id in completable_booking_ids %}<form method="post" action="{{ url_for('owner_booking_action', booking_id=b.id, action='complete') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-secondary btn-small" type="submit">Đánh dấu hoàn thành</button></form>{% endif %}
+            </div>
+          </td></tr>
+          {% else %}<tr><td colspan="6" class="table-empty">Chưa có yêu cầu đặt sân phù hợp.</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+    </main>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const courtListToggle = document.querySelector('#court-list-toggle');
+  const courtListContent = document.querySelector('#court-list-content');
+  if (courtListToggle && courtListContent) {
+    courtListToggle.addEventListener('click', () => {
+      const expanded = courtListToggle.getAttribute('aria-expanded') === 'true';
+      courtListToggle.setAttribute('aria-expanded', String(!expanded));
+      courtListContent.setAttribute('aria-hidden', String(expanded));
+      courtListContent.inert = expanded;
+      courtListContent.classList.toggle('is-collapsed', expanded);
+      courtListToggle.querySelector('.court-toggle-label').textContent = expanded
+        ? courtListToggle.dataset.expandLabel
+        : courtListToggle.dataset.collapseLabel;
+      courtListToggle.querySelector('.court-toggle-icon').textContent = expanded ? '+' : '−';
+    });
+  }
+</script>
+{% endblock %}

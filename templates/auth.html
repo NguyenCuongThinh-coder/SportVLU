@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Đăng ký' if mode == 'register' else 'Đăng nhập' }} — SportVLU{% endblock %}
+{% block content %}
+<main class="auth-page">
+  <aside class="auth-visual"><div class="auth-overlay"></div><a class="logo-button" href="{{ url_for('index') }}"><img class="brand-logo" src="{{ url_for('static', filename='images/logo-vlu.png') }}" alt="Đại học Văn Lang"></a><div class="auth-quote"><span>“</span><blockquote>Mỗi trận đấu hay đều bắt đầu từ một sân chơi phù hợp.</blockquote><p>SportVLU giúp bạn dành ít thời gian tìm sân hơn và có nhiều thời gian chơi hơn.</p></div><div class="auth-dots"><i></i><i></i><i></i></div></aside>
+  <section class="auth-form-wrap"><div class="auth-form">
+    <a class="auth-mobile-logo logo-button" href="{{ url_for('index') }}"><img class="brand-logo" src="{{ url_for('static', filename='images/logo-vlu.png') }}" alt="Đại học Văn Lang"></a>
+    <span class="kicker">{{ 'Bắt đầu cùng SportVLU' if mode == 'register' else 'Chào mừng trở lại' }}</span>
+    <h1>{{ 'Tạo tài khoản mới' if mode == 'register' else 'Đăng nhập tài khoản' }}</h1>
+    <p>{{ 'Tham gia cộng đồng thể thao và đặt sân dễ dàng hơn.' if mode == 'register' else 'Nhập thông tin để tiếp tục hành trình thể thao của bạn.' }}</p>
+    <form method="post" action="{{ url_for('register') if mode == 'register' else url_for('login') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      {% if mode == 'login' and request.args.get('next') %}<input type="hidden" name="next" value="{{ request.args.get('next') }}">{% endif %}
+      {% if mode == 'register' %}
+      <label class="field"><span>Họ và tên *</span><input name="name" required maxlength="100" autocomplete="name" value="{{ request.form.get('name', '') }}"></label>
+      <label class="field"><span>Số điện thoại</span><input name="phone" type="tel" autocomplete="tel" value="{{ request.form.get('phone', '') }}"></label>
+      {% endif %}
+      <label class="field"><span>Email *</span><input name="email" type="email" required autocomplete="email" value="{{ request.form.get('email', '') }}"></label>
+      <label class="field"><span>Mật khẩu *{% if mode == 'register' %} (ít nhất 8 ký tự){% endif %}</span><input name="password" type="password" required autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" {% if mode == 'register' %}minlength="8"{% endif %}></label>
+      {% if mode == 'register' %}
+      <label class="field"><span>Xác nhận mật khẩu *</span><input name="confirm_password" type="password" required minlength="8" autocomplete="new-password"></label>
+      <label class="field"><span>Bạn muốn sử dụng với vai trò nào?</span><select name="role"><option value="player">Người chơi — tìm và đặt sân</option><option value="owner" {% if request.form.get('role') == 'owner' %}selected{% endif %}>Chủ sân — quản lý sân và lịch đặt</option></select></label>
+      {% endif %}
+      <button class="btn btn-primary full" type="submit">{{ 'Tạo tài khoản' if mode == 'register' else 'Đăng nhập' }} →</button>
+    </form>
+    <div class="auth-switch">{% if mode == 'register' %}Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>{% else %}Chưa có tài khoản? <a href="{{ url_for('register') }}">Đăng ký ngay</a>{% endif %}</div>
+    {% if mode == 'login' %}<p class="auth-switch"><a href="{{ url_for('forgot_password') }}">Quên mật khẩu?</a></p>{% endif %}
+    <p class="auth-footnote">Không chia sẻ mật khẩu với người khác.</p>
+  </div></section>
+</main>
+{% endblock %}

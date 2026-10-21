@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Tìm sân — SportVLU{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<main class="page search-page"><div class="shell">
+  <div class="breadcrumbs"><a href="{{ url_for('index') }}">Trang chủ</a> › Tìm sân</div>
+  <div class="page-title"><div><h1>Tìm sân thể thao</h1><p>Khám phá sân phù hợp với lịch và vị trí của bạn.</p></div></div>
+  <form class="search-toolbar" method="get" action="{{ url_for('courts') }}">
+    <input class="search-wide" name="q" value="{{ q }}" placeholder="Tên sân hoặc từ khóa..." aria-label="Tên sân hoặc từ khóa">
+    <select name="sport" aria-label="Môn thể thao"><option value="">Tất cả môn</option><option value="Cầu lông" {% if sport == 'Cầu lông' %}selected{% endif %}>Cầu lông</option><option value="Pickleball" {% if sport == 'Pickleball' %}selected{% endif %}>Pickleball</option></select>
+    <input name="area" value="{{ area }}" placeholder="Khu vực" aria-label="Khu vực">
+    <button class="btn btn-primary" type="submit">⌕ Tìm sân</button>
+  </form>
+  <div class="active-filters"><span>{{ courts|length }} sân phù hợp</span>{% if q %}<span>Từ khóa: {{ q }}</span>{% endif %}{% if sport %}<span>{{ sport }}</span>{% endif %}{% if area %}<span>{{ area }}</span>{% endif %}<a href="{{ url_for('courts') }}">Xóa bộ lọc</a></div>
+  <div class="results-layout">
+    <section class="results"><div class="results-head"><div><strong>Danh sách sân</strong><span>Dữ liệu theo bộ lọc hiện tại</span></div></div>
+      {% if courts %}<div class="court-grid two">{% for court in courts %}
+      <article class="court-card"><a class="court-photo" href="{{ url_for('court_detail', court_id=court.id) }}"><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa {{ court.sport }}"><span class="sport-pill">{{ court.sport }}</span></a><div class="court-body"><h3><a href="{{ url_for('court_detail', court_id=court.id) }}">{{ court.name }}</a></h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p>{% if court.description %}<p class="court-description">{{ court.description }}</p>{% endif %}<div class="court-footer"><div><strong>{{ court.price }}đ</strong><span>/giờ</span></div><a class="btn btn-secondary" href="{{ url_for('court_detail', court_id=court.id) }}">Xem sân →</a></div></div></article>
+      {% endfor %}</div>{% else %}<div class="empty"><h3>Không tìm thấy sân phù hợp</h3><p>Hãy thử thay đổi từ khóa hoặc bộ lọc.</p></div>{% endif %}
+    </section>
+    <aside id="map" class="map-panel" aria-label="Bản đồ vị trí sân"></aside>
+  </div>
+</div></main>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const points = [{% for c in courts %}{% if c.lat is not none and c.lng is not none %}{lat:{{ c.lat }},lng:{{ c.lng }},name:{{ c.name|tojson }},sport:{{ c.sport|tojson }},area:{{ c.area|tojson }},price:{{ c.price|tojson }},url:{{ url_for('court_detail', court_id=c.id)|tojson }}},{% endif %}{% endfor %}];
+  const mapElement = document.getElementById('map');
+  if (window.L && mapElement) {
+    const map = L.map(mapElement).setView([10.79, 106.69], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    points.forEach((p) => {
+      const content = document.createElement('div');
+      const title = document.createElement('strong'); title.textContent = p.name; content.append(title, document.createElement('br'));
+      content.append(document.createTextNode(`${p.sport} · ${p.area}`), document.createElement('br'));
+      content.append(document.createTextNode(`${p.price}đ/giờ`), document.createElement('br'));
+      const link = document.createElement('a'); link.href = p.url; link.textContent = 'Xem chi tiết'; content.append(link);
+      L.marker([p.lat, p.lng]).addTo(map).bindPopup(content);
+    });
+    if (points.length > 1) map.fitBounds(points.map((p) => [p.lat, p.lng]), { padding: [24, 24] });
+    else if (points.length === 1) map.setView([points[0].lat, points[0].lng], 14);
+  } else if (mapElement) mapElement.textContent = 'Không tải được bản đồ. Vui lòng kiểm tra kết nối Internet.';
+</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Lịch đặt của tôi — SportVLU{% endblock %}
+{% block content %}
+<main class="page dashboard-page"><div class="shell">
+  <div class="dashboard-head"><div><span class="kicker">Tài khoản của tôi</span><h1>Lịch đặt của tôi</h1><p>Theo dõi trạng thái các yêu cầu đặt sân của bạn.</p></div><div class="profile-chip"><span>{{ current_user.name[:2]|upper }}</span><div><b>{{ current_user.name }}</b><small>{{ current_user.email }}</small></div></div></div>
+  <div class="stats-row"><div><span class="stat-icon green">▦</span><p>Tổng lịch đặt<strong>{{ bookings|length }}</strong></p></div><div><span class="stat-icon amber">◷</span><p>Chờ xác nhận<strong>{{ bookings|selectattr('status', 'equalto', 'pending')|list|length }}</strong></p></div><div><span class="stat-icon blue">✓</span><p>Đã xác nhận<strong>{{ bookings|selectattr('status', 'equalto', 'confirmed')|list|length }}</strong></p></div></div>
+  <div class="booking-list">
+  {% for b in bookings %}
+    <article class="booking-item"><img src="{% if b.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=500&q=75{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=500&q=75{% endif %}" alt="Hình minh họa {{ b.sport }}"><div class="booking-info"><div class="booking-id"><span>Mã yêu cầu SS{{ '%05d'|format(b.id) }}</span><span class="status status-{{ b.status }}"><i></i>{{ {'pending':'Chờ xác nhận','confirmed':'Đã xác nhận','rejected':'Bị chủ sân từ chối','cancelled':'Bạn đã hủy','completed':'Đã hoàn thành'}[b.status] }}</span></div><h3>{{ b.court_name }}</h3><p>⌖ {{ b.area }} · {{ b.sport }}</p><div class="booking-time"><span>▦ {{ b.play_date }}</span><span>◷ {{ b.time_slot }}</span></div></div><div class="booking-actions"><a class="btn btn-secondary" href="{{ url_for('court_detail', court_id=b.court_id) }}">Xem chi tiết</a>{% if b.id in cancellable_booking_ids %}<form method="post" action="{{ url_for('cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Bạn muốn hủy yêu cầu này?')"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-danger" type="submit">Hủy yêu cầu</button></form>{% endif %}</div></article>
+  {% else %}<div class="empty"><span class="empty-symbol">▦</span><h3>Bạn chưa có yêu cầu đặt sân</h3><p>Các yêu cầu đặt sân sẽ xuất hiện tại đây.</p><a class="btn btn-primary" href="{{ url_for('courts') }}">Tìm sân ngay</a></div>{% endfor %}
+  </div>
+</div></main>
+{% endblock %}

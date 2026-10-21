@@ -1,0 +1,33 @@
+Python
+
+pycache/
+*.py[cod]
+.venv/
+venv/
+
+Environment variables
+
+.env
+.env.*
+!.env.example
+
+SQLite database and backups
+
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+
+Test artifacts
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+macOS
+
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.tmp

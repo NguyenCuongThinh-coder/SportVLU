@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}SportVLU — Sân chuẩn, lịch đẹp{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-photo"></div><div class="hero-overlay"></div>
+  <div class="shell hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow"><span></span> Nền tảng đặt sân thể thao</div>
+      <h1>Sân chuẩn. Lịch đẹp.<br><em>Chơi hết mình.</em></h1>
+      <p>Khám phá sân cầu lông và pickleball, xem thông tin địa điểm và gửi yêu cầu đặt sân trực tuyến.</p>
+      <div class="hero-trust"><div class="avatar-stack"><span>SS</span><span>CLB</span><span>🏸</span><span>+</span></div><div><b>Tìm sân phù hợp với lịch của bạn</b><div class="stars">CẦU LÔNG · PICKLEBALL</div></div></div>
+    </div>
+    <form class="search-panel" action="{{ url_for('courts') }}" method="get">
+      <div class="search-panel-title"><div>⌕</div><span><b>Tìm sân phù hợp với bạn</b><small>Chọn môn thể thao và khu vực</small></span></div>
+      <label class="field"><span>Bạn muốn chơi môn gì?</span><select name="sport"><option value="">Tất cả môn thể thao</option><option>Cầu lông</option><option>Pickleball</option></select></label>
+      <label class="field"><span>Khu vực hoặc tên sân</span><input name="q" placeholder="Nhập từ khóa tìm kiếm"></label>
+      <label class="field"><span>Khu vực</span><input name="area" placeholder="Ví dụ: Bình Thạnh"></label>
+      <button class="btn btn-primary full" type="submit">⌕ Tìm sân ngay</button>
+    </form>
+  </div>
+</section>
+<section class="home-proof" aria-label="Các môn thể thao"><div class="shell home-proof-grid">
+  <div><a href="{{ url_for('courts', sport='Cầu lông') }}"><span class="proof-icon">🏸</span><p><strong>Cầu lông</strong><small>Tìm sân theo khu vực</small></p></a></div>
+  <div><a href="{{ url_for('courts', sport='Pickleball') }}"><span class="proof-icon">🏓</span><p><strong>Pickleball</strong><small>Khám phá sân gần bạn</small></p></a></div>
+  <div><a href="{{ url_for('courts') }}#map"><span class="proof-icon">⌖</span><p><strong>Bản đồ sân</strong><small>Xem vị trí sân</small></p></a></div>
+  <div><a href="{{ url_for('courts') }}"><span class="proof-icon">✓</span><p><strong>Đặt trực tuyến</strong><small>Gửi yêu cầu đến chủ sân</small></p></a></div>
+</div></section>
+<section class="section shell">
+  <div class="section-head"><div><span class="kicker">Địa điểm nổi bật</span><h2>Khám phá sân thể thao</h2><p>Các sân đang có trên SportVLU.</p></div><a class="text-link" href="{{ url_for('courts') }}">Xem tất cả sân →</a></div>
+  <div class="court-grid">
+  {% for court in courts %}
+    <article class="court-card">
+      <div class="court-photo"><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa {{ court.sport }}"><span class="sport-pill">{{ court.sport }}</span></div>
+      <div class="court-body"><h3>{{ court.name }}</h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p><div class="court-footer"><div><strong>{{ court.price }}đ</strong><span>/giờ</span></div><a class="btn btn-secondary" href="{{ url_for('court_detail', court_id=court.id) }}">Xem sân →</a></div></div>
+    </article>
+  {% else %}<div class="empty"><h3>Chưa có sân để hiển thị</h3><p>Hãy quay lại sau để khám phá các sân mới.</p></div>{% endfor %}
+  </div>
+</section>
+<section class="how"><div class="shell"><div class="section-head centered"><div><span class="kicker">Nhanh chóng và đơn giản</span><h2>Đặt sân chỉ với 3 bước</h2></div></div><div class="steps">
+  <div class="step"><span class="step-number">01</span><div class="step-icon">⌕</div><h3>Tìm sân</h3><p>Lọc theo môn thể thao, khu vực hoặc từ khóa.</p></div>
+  <div class="step"><span class="step-number">02</span><div class="step-icon">▦</div><h3>Chọn lịch chơi</h3><p>Xem thông tin sân và chọn ngày, khung giờ mong muốn.</p></div>
+  <div class="step"><span class="step-number">03</span><div class="step-icon">✓</div><h3>Gửi yêu cầu</h3><p>Chủ sân sẽ xem và cập nhật trạng thái yêu cầu.</p></div>
+</div></div></section>
+<section class="owner-cta shell"><div><span class="kicker light">Dành cho đối tác</span><h2>Bạn đang vận hành sân thể thao?</h2><p>Tạo tài khoản chủ sân để đăng thông tin địa điểm và quản lý các yêu cầu đặt sân.</p><a class="btn btn-primary" href="{{ url_for('register') }}">Trở thành đối tác →</a></div><div class="mini-dashboard"><div class="mini-top"><span class="logo"><span class="logo-mark"><span></span></span></span><span>Quản lý trên SportVLU</span></div><div class="mini-stats"><div><small>Thông tin sân</small><strong>01</strong><em>Cập nhật trực tuyến</em></div><div><small>Yêu cầu đặt</small><strong>24/7</strong><em>Quản lý lịch dễ dàng</em></div></div><div class="chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></section>
+{% endblock %}

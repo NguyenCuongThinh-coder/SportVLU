@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Hồ sơ — SportVLU{% endblock %}
+{% block content %}
+<main class="page profile-page"><div class="shell narrow">
+  <div class="page-title"><h1>Hồ sơ tài khoản</h1><p>Cập nhật thông tin liên hệ và mật khẩu của bạn.</p></div>
+  <section class="form-card profile-card">
+    <h2>Thông tin cá nhân</h2>
+    <form method="post" action="{{ url_for('profile') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <label class="field"><span>Họ và tên *</span><input name="name" value="{{ request.form.get('name', user.name) }}" maxlength="100" autocomplete="name" required></label>
+      <label class="field"><span>Email</span><input type="email" value="{{ user.email }}" readonly><small>Email chưa thể đổi vì hệ thống chưa xác minh địa chỉ email mới.</small></label>
+      <label class="field"><span>Số điện thoại</span><input name="phone" type="tel" value="{{ request.form.get('phone', user.phone or '') }}" maxlength="30" autocomplete="tel"></label>
+      <button class="btn btn-primary" type="submit">Lưu hồ sơ</button>
+    </form>
+  </section>
+  <section class="form-card profile-card">
+    <h2>Đổi mật khẩu</h2>
+    <form method="post" action="{{ url_for('change_password') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <label class="field"><span>Mật khẩu hiện tại *</span><input name="current_password" type="password" autocomplete="current-password" required></label>
+      <label class="field"><span>Mật khẩu mới *</span><input name="new_password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+      <label class="field"><span>Xác nhận mật khẩu mới *</span><input name="confirm_password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+      <button class="btn btn-primary" type="submit">Đổi mật khẩu</button>
+    </form>
+  </section>
+</div></main>
+{% endblock %}
