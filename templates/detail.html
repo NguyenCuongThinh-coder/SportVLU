@@ -3,11 +3,14 @@
 {% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
 {% block content %}
 <main class="page detail-page"><div class="shell">
+  {% set court_image = url_for('static', filename=court.image_path) if court.image_path else ('https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=1400&q=85' if court.sport == 'Pickleball' else 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1400&q=85') %}
   <a class="back-link" href="{{ url_for('courts') }}">← Quay lại danh sách sân</a>
-  <div class="detail-gallery">
-    <img class="gallery-main" src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=1400&q=85{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1400&q=85{% endif %}" alt="Hình minh họa {{ court.sport }}">
+  <div class="detail-gallery{% if court.image_path %} has-custom-image{% endif %}">
+    <img class="gallery-main" src="{{ court_image }}" alt="Hình ảnh {{ court.name }}">
+    {% if not court.image_path %}
     <img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1711996151738-657bd95b7cdb?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626721105368-a69248e93b32?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa sân">
     <div class="gallery-last"><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa sân"></div>
+    {% endif %}
   </div>
   <div class="detail-layout">
     <div class="detail-content"><span class="sport-pill static">{{ court.sport }}</span><h1>{{ court.name }}</h1><div class="detail-sub"><span>⌖ {{ court.area }}, TP. Hồ Chí Minh</span></div>

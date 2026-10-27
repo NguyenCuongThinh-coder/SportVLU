@@ -19,6 +19,9 @@ SQLite database and backups
 *.sqlite3
 *.bak
 
+# Uploaded court photos (stored on the running instance)
+static/uploads/
+
 Test artifacts
 
 .pytest_cache/

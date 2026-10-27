@@ -29,8 +29,9 @@
   <div class="section-head"><div><span class="kicker">Địa điểm nổi bật</span><h2>Khám phá sân thể thao</h2><p>Các sân đang có trên SportVLU.</p></div><a class="text-link" href="{{ url_for('courts') }}">Xem tất cả sân →</a></div>
   <div class="court-grid">
   {% for court in courts %}
+    {% set court_image = url_for('static', filename=court.image_path) if court.image_path else ('https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80' if court.sport == 'Pickleball' else 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80') %}
     <article class="court-card">
-      <div class="court-photo"><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa {{ court.sport }}"><span class="sport-pill">{{ court.sport }}</span></div>
+      <div class="court-photo"><img src="{{ court_image }}" alt="Hình ảnh {{ court.name }}"><span class="sport-pill">{{ court.sport }}</span></div>
       <div class="court-body"><h3>{{ court.name }}</h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p><div class="court-footer"><div><strong>{{ court.price }}đ</strong><span>/giờ</span></div><a class="btn btn-secondary" href="{{ url_for('court_detail', court_id=court.id) }}">Xem sân →</a></div></div>
     </article>
   {% else %}<div class="empty"><h3>Chưa có sân để hiển thị</h3><p>Hãy quay lại sau để khám phá các sân mới.</p></div>{% endfor %}

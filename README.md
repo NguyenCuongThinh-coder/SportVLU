@@ -64,7 +64,8 @@ Render tự deploy commit mới trên `main`. Thay đổi code thông thường 
 
 ## Database và giới hạn hiện tại
 
-- Migration thêm cột `courts.is_active` và bảng token đặt lại mật khẩu theo cách tương thích với dữ liệu cũ. Ứng dụng tạo bản sao riêng trước migration; các bản sao cũ không bị ghi đè.
+- Migration thêm cột `courts.is_active`, `courts.image_path` và bảng token đặt lại mật khẩu theo cách tương thích với dữ liệu cũ. Ứng dụng tạo bản sao riêng trước migration; các bản sao cũ không bị ghi đè.
+- Ảnh sân tải lên là JPG, PNG hoặc WebP, tối đa 5 MB, được lưu trong `static/uploads/`. Ảnh lưu trên Render Free có thể mất khi service được deploy lại hoặc filesystem được làm mới; muốn lưu lâu dài cần dùng object storage.
 - Ngừng kinh doanh là thao tác ẩn sân khỏi tìm kiếm; lịch sử đặt vẫn được giữ. Sân có lịch chờ/đã xác nhận phải xử lý trước khi ngừng.
 - Khung giờ hiện có độ dài cố định một tiếng. Chưa tích hợp cổng thanh toán hoặc SMS; email yêu cầu SMTP hoạt động. Nếu email không gửi được, thao tác đặt/trạng thái vẫn được lưu nhưng hiện chưa có hàng đợi gửi lại.
 - Các đơn `cancelled` cũ được giữ nguyên; hệ thống không thể xác định ngược chúng là chủ sân từ chối hay khách hủy trước khi có trạng thái `rejected` riêng.

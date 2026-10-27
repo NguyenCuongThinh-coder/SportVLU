@@ -17,6 +17,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=(cookie_secure == '1') if cookie_secure is not None else IS_PRODUCTION,
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024 + 256 * 1024,
 )
 if IS_PRODUCTION and not os.environ.get('SPORTSLOT_DB_PATH'):
     raise RuntimeError('SPORTSLOT_DB_PATH must be set in production.')
@@ -89,18 +90,20 @@ def init_db():
         if 'courts' in existing_tables:
             columns={r['name'] for r in c.execute('PRAGMA table_info(courts)')}
             indexes={r['name'] for r in c.execute('PRAGMA index_list(bookings)')} if 'bookings' in existing_tables else set()
-            if 'is_active' not in columns or 'idx_bookings_court_date_slot' not in indexes or 'idx_bookings_user_created' not in indexes:
+            if 'is_active' not in columns or 'image_path' not in columns or 'idx_bookings_court_date_slot' not in indexes or 'idx_bookings_user_created' not in indexes:
                 backup_database(DB_PATH)
         if 'users' in existing_tables and 'password_reset_tokens' not in existing_tables:
             backup_database(DB_PATH,'pre-account-migration')
         c.executescript('''
         CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, phone TEXT, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT DEFAULT CURRENT_TIMESTAMP);
-        CREATE TABLE IF NOT EXISTS courts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, sport TEXT NOT NULL, area TEXT NOT NULL, price TEXT NOT NULL, lat REAL, lng REAL, description TEXT, owner_id INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP, is_active INTEGER NOT NULL DEFAULT 1, FOREIGN KEY(owner_id) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS courts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, sport TEXT NOT NULL, area TEXT NOT NULL, price TEXT NOT NULL, lat REAL, lng REAL, description TEXT, owner_id INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP, is_active INTEGER NOT NULL DEFAULT 1, image_path TEXT, FOREIGN KEY(owner_id) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS bookings(id INTEGER PRIMARY KEY AUTOINCREMENT, court_id INTEGER NOT NULL, user_id INTEGER NOT NULL, play_date TEXT NOT NULL, time_slot TEXT NOT NULL, customer_name TEXT NOT NULL, phone TEXT NOT NULL, note TEXT, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(court_id) REFERENCES courts(id), FOREIGN KEY(user_id) REFERENCES users(id));
         ''')
         court_columns={r['name'] for r in c.execute('PRAGMA table_info(courts)')}
         if 'is_active' not in court_columns:
             c.execute('ALTER TABLE courts ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1')
+        if 'image_path' not in court_columns:
+            c.execute('ALTER TABLE courts ADD COLUMN image_path TEXT')
         c.execute('CREATE INDEX IF NOT EXISTS idx_bookings_court_date_slot ON bookings(court_id,play_date,time_slot,status)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_bookings_user_created ON bookings(user_id,created_at)')
         c.execute('''CREATE TABLE IF NOT EXISTS password_reset_tokens(
@@ -153,6 +156,31 @@ def court_form_values():
     except ValueError: return None, 'Vĩ độ và kinh độ phải là số.'
     if lat is not None and (not -90<=lat<=90 or not -180<=lng<=180): return None, 'Tọa độ nằm ngoài phạm vi hợp lệ.'
     return {'name':name,'sport':sport,'area':area,'price':price,'lat':lat,'lng':lng,'description':request.form.get('description','').strip()[:1000]}, None
+
+def save_court_image(upload):
+    if not upload or not upload.filename:
+        return None, None
+    extension=os.path.splitext(upload.filename)[1].lower()
+    allowed={'.jpg': 'jpeg', '.jpeg': 'jpeg', '.png': 'png', '.webp': 'webp'}
+    if extension not in allowed:
+        return None, 'Ảnh sân phải có định dạng JPG, PNG hoặc WebP.'
+    data=upload.stream.read(5 * 1024 * 1024 + 1)
+    if len(data)>5 * 1024 * 1024:
+        return None, 'Ảnh sân không được vượt quá 5 MB.'
+    image_type=allowed[extension]
+    valid_signature=(
+        (image_type=='jpeg' and data.startswith(b'\xff\xd8\xff')) or
+        (image_type=='png' and data.startswith(b'\x89PNG\r\n\x1a\n')) or
+        (image_type=='webp' and len(data)>=12 and data[:4]==b'RIFF' and data[8:12]==b'WEBP')
+    )
+    if not valid_signature:
+        return None, 'Tệp đã chọn không phải ảnh hợp lệ.'
+    filename=f'{secrets.token_hex(16)}{extension}'
+    upload_dir=os.path.join(app.static_folder,'uploads')
+    os.makedirs(upload_dir,exist_ok=True)
+    with open(os.path.join(upload_dir,filename),'wb') as image_file:
+        image_file.write(data)
+    return f'uploads/{filename}', None
 
 def csrf_value():
     if '_csrf_token' not in session: session['_csrf_token']=secrets.token_urlsafe(32)
@@ -416,7 +444,7 @@ def book(court_id):
 def my_bookings():
     u=current_user()
     if u['role']!='player': flash('Trang lịch đặt dành cho tài khoản người chơi.','warning'); return redirect(url_for('owner_dashboard'))
-    with db() as c: rows=c.execute('SELECT bookings.*,courts.name AS court_name,courts.area,courts.sport FROM bookings JOIN courts ON courts.id=bookings.court_id WHERE bookings.user_id=? ORDER BY bookings.created_at DESC',(u['id'],)).fetchall()
+    with db() as c: rows=c.execute('SELECT bookings.*,courts.name AS court_name,courts.area,courts.sport,courts.image_path FROM bookings JOIN courts ON courts.id=bookings.court_id WHERE bookings.user_id=? ORDER BY bookings.created_at DESC',(u['id'],)).fetchall()
     cancellable={row['id'] for row in rows if row['status'] in ('pending','confirmed') and not booking_has_started(row)}
     return render_template('my_bookings.html',bookings=rows,cancellable_booking_ids=cancellable)
 
@@ -478,8 +506,11 @@ def add_court():
     u=current_user(); values,error=court_form_values()
     if error: flash(error,'danger')
     else:
-        with db() as c: c.execute('INSERT INTO courts(name,sport,area,price,lat,lng,description,owner_id) VALUES(?,?,?,?,?,?,?,?)',(values['name'],values['sport'],values['area'],values['price'],values['lat'],values['lng'],values['description'],u['id']))
-        flash('Đã thêm sân mới.','success')
+        image_path,image_error=save_court_image(request.files.get('image'))
+        if image_error: flash(image_error,'danger')
+        else:
+            with db() as c: c.execute('INSERT INTO courts(name,sport,area,price,lat,lng,description,owner_id,image_path) VALUES(?,?,?,?,?,?,?,?,?)',(values['name'],values['sport'],values['area'],values['price'],values['lat'],values['lng'],values['description'],u['id'],image_path))
+            flash('Đã thêm sân mới.','success')
     return redirect(url_for('owner_dashboard'))
 
 @app.route('/owner/courts/<int:court_id>/edit',methods=['POST'])
@@ -491,8 +522,11 @@ def edit_court(court_id):
         if not court: abort(404)
         if error: flash(error,'danger')
         else:
-            c.execute('UPDATE courts SET name=?,sport=?,area=?,price=?,lat=?,lng=?,description=? WHERE id=? AND owner_id=?',(values['name'],values['sport'],values['area'],values['price'],values['lat'],values['lng'],values['description'],court_id,u['id']))
-            flash('Đã cập nhật thông tin sân.','success')
+            image_path,image_error=save_court_image(request.files.get('image'))
+            if image_error: flash(image_error,'danger')
+            else:
+                c.execute('UPDATE courts SET name=?,sport=?,area=?,price=?,lat=?,lng=?,description=?,image_path=COALESCE(?,image_path) WHERE id=? AND owner_id=?',(values['name'],values['sport'],values['area'],values['price'],values['lat'],values['lng'],values['description'],image_path,court_id,u['id']))
+                flash('Đã cập nhật thông tin sân.','success')
     return redirect(url_for('owner_dashboard',_anchor='my-courts'))
 
 @app.route('/owner/courts/<int:court_id>/delete',methods=['POST'])

@@ -20,7 +20,8 @@
       <div class="info-box booking-disclaimer"><span>ⓘ</span><p>Gửi yêu cầu chưa đồng nghĩa với việc sân đã xác nhận. Hệ thống sẽ kiểm tra trùng lịch trước khi lưu.</p></div>
       <button class="btn btn-primary full" type="submit">Gửi yêu cầu đặt sân →</button>
     </form>
-    <aside class="order-card"><h2>Tóm tắt sân</h2><img src="{% if court.sport == 'Pickleball' %}https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80{% endif %}" alt="Hình minh họa {{ court.sport }}"><span class="sport-pill static">{{ court.sport }}</span><h3>{{ court.name }}</h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p><div class="order-details"><div><span>Giá tham khảo</span><b>{{ court.price }}đ/giờ</b></div><div><span>Trạng thái</span><b>Chờ chủ sân xác nhận</b></div></div><div class="info-box"><span>✓</span><p>Không thu thanh toán trên website. Chủ sân sẽ cập nhật trạng thái yêu cầu.</p></div></aside>
+    {% set court_image = url_for('static', filename=court.image_path) if court.image_path else ('https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?auto=format&fit=crop&w=900&q=80' if court.sport == 'Pickleball' else 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80') %}
+    <aside class="order-card"><h2>Tóm tắt sân</h2><img src="{{ court_image }}" alt="Hình ảnh {{ court.name }}"><span class="sport-pill static">{{ court.sport }}</span><h3>{{ court.name }}</h3><p>⌖ {{ court.area }}, TP. Hồ Chí Minh</p><div class="order-details"><div><span>Giá tham khảo</span><b>{{ court.price }}đ/giờ</b></div><div><span>Trạng thái</span><b>Chờ chủ sân xác nhận</b></div></div><div class="info-box"><span>✓</span><p>Không thu thanh toán trên website. Chủ sân sẽ cập nhật trạng thái yêu cầu.</p></div></aside>
   </div>
 </div></main>
 {% endblock %}

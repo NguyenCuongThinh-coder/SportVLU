@@ -206,6 +206,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-dark); box
 .detail-page { background: white; }
 .back-link { color: var(--muted); margin-bottom: 20px; }
 .detail-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 180px 180px; gap: 10px; border-radius: var(--radius-lg); overflow: hidden; }
+.detail-gallery.has-custom-image { grid-template-columns: 1fr; grid-template-rows: 360px; }
+.detail-gallery.has-custom-image .gallery-main { grid-row: auto; }
 .detail-gallery img { width: 100%; height: 100%; object-fit: cover; }
 .gallery-main { grid-row: 1 / 3; }
 .gallery-last { position: relative; overflow: hidden; }
@@ -434,7 +436,7 @@ td > small { color: var(--muted); margin-top: 3px; }
 .table-user > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #edf2e4; color: #598e09; font-size: 8px; font-weight: 700; }
 .table-user b, .table-user small { display: block; }.table-user small { color: var(--muted); font-size: 8px; margin-top: 2px; }
 .table-actions { display: flex; gap: 6px; }
-.table-actions button { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; }
+.table-actions .approve, .table-actions .reject { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; }
 .table-actions .approve { color: #579009; background: var(--green-soft); border: 1px solid #d6edab; }.table-actions .reject { color: var(--red); background: var(--red-soft); border: 1px solid #f3cdcd; }
 .more { background: none; border: 0; color: var(--muted); letter-spacing: 2px; }
 .view-all { width: 100%; border: 0; border-top: 1px solid var(--line); background: white; padding: 12px; color: #568d08; font-size: 9px; font-weight: 700; display: flex; justify-content: center; gap: 6px; }
@@ -470,6 +472,10 @@ td > small { color: var(--muted); margin-top: 3px; }
 .modal-head > button { background: none; border: 0; color: var(--muted); }
 .upload-box { border: 1px dashed #bdc8d2; background: var(--surface); border-radius: 10px; min-height: 125px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 5px; }
 .upload-box svg { color: #639e0c; }.upload-box b { color: var(--ink); }.upload-box span { font-size: 9px; }.upload-box button { border: 0; background: none; color: #5d950a; font-weight: 700; font-size: 9px; }
+.image-upload-button { align-self: flex-start; min-height: 40px; padding: 0 13px; border: 1px solid var(--line); border-radius: 8px; background: #102d49; color: var(--ink); font-weight: 700; cursor: pointer; }
+.image-upload-button:hover { border-color: var(--green-dark); }
+.image-upload-current, .image-upload-preview { width: min(100%, 320px); max-height: 190px; object-fit: cover; border: 1px solid var(--line); border-radius: 10px; }
+.image-upload-preview[hidden] { display: none; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 15px; border-top: 1px solid var(--line); }
 
 footer { background: #061426; color: white; padding-top: 55px; }
@@ -499,7 +505,7 @@ footer { background: #061426; color: white; padding-top: 55px; }
   .managed-grid { grid-template-columns: repeat(2,1fr); }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .shell, .narrow { width: min(100% - 30px, 1180px); }
   .topbar { height: 66px; }
   .mobile-menu { display: block; }
@@ -714,7 +720,7 @@ input::placeholder, textarea::placeholder { color: #7f91a4; }
 .flash-info { border-color: #39769a; }
 .mobile-menu { font-size: 23px; }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .main-nav a { min-height: 45px; height: 45px; }
   .main-nav a.active:after { left: -15px; right: auto; top: 10px; bottom: 10px; width: 3px; height: auto; }
   .main-nav a.owner-link { border-left: 0; padding-left: 0; border-top: 1px solid #273d55; }
@@ -725,4 +731,217 @@ input::placeholder, textarea::placeholder { color: #7f91a4; }
   .detail-map { height: 250px; }
   #map.map-panel { height: 360px; }
   .owner-top form { margin-left: auto; }
+}
+
+/* Mobile spacing refinements for SportVLU */
+@media (max-width: 768px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+  .shell, .narrow { width: min(100% - 30px, 1180px); }
+  .hero-inner { gap: 24px; padding-block: 34px 30px; }
+  .hero-copy h1 { font-size: 37px; line-height: 1.1; letter-spacing: -1.5px; margin: 12px 0 13px; }
+  .hero-copy > p { line-height: 1.6; margin-bottom: 12px; }
+  .hero-trust { margin-top: 20px; gap: 12px; }
+  .search-panel { padding: 15px; gap: 11px; border-radius: 18px; }
+  .search-panel-title { gap: 10px; padding-bottom: 2px; }
+  .search-panel-title > div { width: 38px; height: 38px; }
+  .home-proof-grid { min-height: 0; padding-block: 10px; }
+  .home-proof-grid > div { min-height: 42px; }
+  .section { padding-block: 42px; }
+  .section-head { margin-bottom: 22px; gap: 14px; }
+  .section-head h2 { font-size: 23px; line-height: 1.25; }
+  .court-grid { gap: 14px; }
+  .page .court-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 16px;
+    align-items: start;
+  }
+  .page .court-grid.two .court-card {
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .page .court-grid.two .court-photo { height: auto; aspect-ratio: 3 / 4; }
+  .page .court-grid.two .court-body { padding: 13px 2px 2px; }
+  .page .court-grid.two .court-body h3 {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 9px 0 6px;
+    overflow-wrap: anywhere;
+  }
+  .page .court-grid.two .court-body > p { font-size: 11px; line-height: 1.55; }
+  .page .court-grid.two .court-description { display: none; }
+  .page .court-grid.two .sport-pill { left: 10px; top: 10px; padding: 5px 8px; font-size: 9px; opacity: .94; }
+  .page .court-grid.two .court-footer { display: block; padding-top: 10px; }
+  .page .court-grid.two .court-footer > div { margin-bottom: 9px; }
+  .page .court-grid.two .court-footer strong { font-size: 14px; }
+  .page .court-grid.two .court-footer .btn { width: 100%; min-height: 38px; font-size: 10px; padding-inline: 5px; background: transparent; }
+  .court-photo { height: 155px; }
+  .court-body { padding: 12px; }
+  .court-body h3 { font-size: 16px; margin: 7px 0 4px; }
+  .court-body > p { line-height: 1.45; }
+  .court-body > p.court-description { margin-top: 6px !important; }
+  .court-meta { margin: 8px 0; flex-wrap: wrap; }
+  .court-footer { padding-top: 9px; gap: 10px; }
+  .court-footer .btn { min-height: 42px; }
+  .how { padding-block: 42px; }
+  .steps { gap: 4px; }
+  .step { padding: 12px 20px 20px; }
+  .step-number { font-size: 46px; left: calc(50% - 63px); top: 0; }
+  .step-icon { width: 54px; height: 54px; border-radius: 15px; margin-bottom: 13px; box-shadow: 5px 5px 0 var(--green); }
+  .step p { line-height: 1.55; font-size: 13px; }
+  .owner-cta { margin-block: 34px; padding: 28px 20px; gap: 20px; }
+  .page { padding-block: 22px 48px; }
+  .page-title h1, .detail-content h1 { font-size: 28px; line-height: 1.2; }
+  .search-toolbar { margin-top: 17px; gap: 8px; padding: 11px; }
+  .search-toolbar input, .search-toolbar select, .search-toolbar .btn,
+  .search-panel input, .search-panel select, .field input, .field select,
+  .field textarea, .btn { min-height: 44px; }
+  .advanced-filters { gap: 12px; padding: 14px; }
+  .map-panel { max-width: 100%; }
+  .detail-gallery { grid-template-rows: 220px; }
+  .detail-gallery.has-custom-image { grid-template-rows: 220px; }
+  .booking-card, .form-card, .order-card { padding: 18px; }
+  .form-section { margin-top: 18px; }
+  .stats-row { gap: 10px; margin: 20px 0; }
+  .stats-row > div { padding: 13px; gap: 10px; }
+  .booking-item { padding: 13px; gap: 12px; }
+  .booking-actions .btn { min-height: 42px; }
+  .owner-content { padding: 18px 15px 34px; }
+  .owner-heading { gap: 10px; }
+  .owner-stats, .compact-stats { gap: 10px; }
+  .owner-stats > div, .owner-stats > a { padding: 13px; }
+  .owner-card-head { padding: 14px 15px; }
+  .owner-form { padding: 0 15px 15px; gap: 12px; }
+  .owner-bottom { gap: 14px; }
+  .table-wrap { max-width: 100%; overscroll-behavior-x: contain; }
+  .owner-card table { min-width: 620px; }
+  .court-list-scroll { max-height: min(280px, 50vh); }
+  .footer-grid { gap: 24px; padding-bottom: 28px; }
+  footer { padding-top: 34px; }
+  .copyright { padding-block: 15px; }
+}
+
+@media (max-width: 430px) {
+  .hero-copy h1 { font-size: 33px; letter-spacing: -1px; }
+  .hero-inner { padding-block: 28px 25px; }
+  .search-panel { padding: 13px; gap: 9px; }
+  .home-proof-grid { padding-block: 6px; }
+  .section, .how { padding-block: 34px; }
+  .court-photo { height: 145px; }
+  .step { padding: 10px 14px 16px; }
+  .step-number { font-size: 40px; left: calc(50% - 55px); }
+  .step-icon { width: 50px; height: 50px; }
+  .owner-cta { padding: 24px 16px; }
+  .booking-card, .form-card, .order-card { padding: 15px; }
+  .booking-item { grid-template-columns: 76px minmax(0, 1fr); }
+  .booking-item > img { width: 76px; height: 76px; }
+  .booking-id { flex-wrap: wrap; gap: 6px; }
+  .booking-actions { gap: 7px; }
+  .owner-card-head form, .owner-booking-filters { width: 100%; }
+  .owner-card-head select { max-width: 100%; }
+  .court-modal { padding: 17px; gap: 13px; }
+}
+
+@media (max-width: 768px) {
+  .section.shell .court-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 16px;
+    align-items: start;
+  }
+  .section.shell .court-grid .court-card {
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .section.shell .court-grid .court-photo { height: auto; aspect-ratio: 3 / 4; }
+  .section.shell .court-grid .court-body { padding: 13px 2px 2px; }
+  .section.shell .court-grid .court-body h3 {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 9px 0 6px;
+    overflow-wrap: anywhere;
+  }
+  .section.shell .court-grid .court-body > p { font-size: 11px; line-height: 1.55; }
+  .section.shell .court-grid .court-footer { display: block; padding-top: 10px; }
+  .section.shell .court-grid .court-footer > div { margin-bottom: 9px; }
+  .section.shell .court-grid .court-footer strong { font-size: 14px; }
+  .section.shell .court-grid .court-footer .btn {
+    width: 100%;
+    min-height: 38px;
+    font-size: 10px;
+    padding-inline: 5px;
+    background: transparent;
+  }
+
+  .how .steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+  .how .step { min-width: 0; padding: 10px 4px 8px; }
+  .how .step-number {
+    position: static;
+    display: block;
+    font-size: 23px;
+    line-height: 1;
+    margin: 0 auto 8px;
+    color: #c4cbd3;
+  }
+  .how .step-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    margin: 0 auto 10px;
+    box-shadow: 4px 4px 0 var(--green);
+  }
+  .how .step h3 { font-size: 12px; line-height: 1.35; margin-bottom: 6px; }
+  .how .step p { font-size: 11px; line-height: 1.45; }
+  .how .step:not(:last-child):after {
+    display: block;
+    top: 69px;
+    right: -10%;
+    width: 20%;
+    border-color: #526273;
+  }
+  .court-list-scroll table th:last-child,
+  .court-list-scroll table td:last-child { min-width: 220px; }
+  .court-management .owner-court-actions { flex-wrap: wrap; gap: 8px; }
+  .court-management .owner-court-actions .btn { min-height: 40px; padding-inline: 10px; font-size: 11px; }
+}
+
+@media (max-width: 430px) {
+  .how .step { padding-inline: 2px; }
+  .how .step-icon { width: 40px; height: 40px; }
+  .how .step h3 { font-size: 11px; }
+  .how .step p { font-size: 10px; }
+}
+
+@media (max-width: 430px) {
+  footer { padding-top: 28px; }
+  .footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 16px;
+    padding-bottom: 22px;
+  }
+  .footer-grid > div:first-child,
+  .footer-grid > div:last-child { grid-column: 1 / -1; }
+  .brand-logo { width: 132px; }
+  .footer-grid > div:first-child p {
+    margin: 11px 0 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .footer-grid > div:not(:first-child) { gap: 8px; }
+  .footer-grid b { font-size: 12px; margin-bottom: 0; }
+  .footer-grid a, .footer-note { font-size: 11px; line-height: 1.55; }
+  .footer-note { max-width: 320px; }
+  .copyright {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding-block: 14px;
+    line-height: 1.5;
+  }
 }
