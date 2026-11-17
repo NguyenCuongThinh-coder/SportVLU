@@ -29,6 +29,13 @@ Mở `http://127.0.0.1:5000`. Để chạy trong môi trường phát triển c�
 
 Có thể chọn database riêng bằng `SPORTSLOT_DB_PATH`; mặc định ứng dụng dùng `sportslot.db` cạnh `app.py`. Lần khởi tạo database rỗng sẽ thêm 40 sân mẫu (20 cầu lông, 20 pickleball) để demo. Tên, giá và tọa độ sân mẫu không đại diện cho địa điểm đã xác minh.
 
+### Tài khoản Demo có sẵn
+
+Hệ thống tự động khởi tạo sẵn 2 tài khoản demo khi nạp dữ liệu mẫu (hoạt động cả trên Render lẫn máy local):
+- **Người chơi (Khách):** `khach@sportvlu.vn` | Mật khẩu: `12345678`
+- **Chủ sân:** `chusan@sportvlu.vn` | Mật khẩu: `12345678` (quản lý sẵn 40 sân mẫu)
+- Tại trang Đăng nhập, có sẵn 2 nút **Đăng nhập nhanh 1-Click** để tự động điền và đăng nhập ngay mà không cần đăng ký tài khoản mới.
+
 ## Chuẩn bị deploy lên Render
 
 Repository có `render.yaml` để tạo Render Web Service trên gói Free, chạy Gunicorn một worker và SQLite tại `/tmp/sportslot.db`. Cấu hình này dành cho demo, không cần dịch vụ trả phí và không tạo dịch vụ chỉ bằng việc thêm file vào Git.
@@ -52,6 +59,12 @@ Các bài kiểm thử dùng database tạm, không sửa dữ liệu trong `spo
 
 ## Cập nhật website sau khi deploy
 
+Có thể dùng script tự động kiểm thử và đẩy code trong 1 lệnh:
+```bash
+./push.sh "Mô tả thay đổi"
+```
+
+Hoặc thực hiện thủ công:
 ```bash
 git status
 python -m unittest discover -s tests -v

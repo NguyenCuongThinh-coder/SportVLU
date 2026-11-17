@@ -24,8 +24,38 @@
       <button class="btn btn-primary full" type="submit">{{ 'Tạo tài khoản' if mode == 'register' else 'Đăng nhập' }} →</button>
     </form>
     <div class="auth-switch">{% if mode == 'register' %}Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>{% else %}Chưa có tài khoản? <a href="{{ url_for('register') }}">Đăng ký ngay</a>{% endif %}</div>
-    {% if mode == 'login' %}<p class="auth-switch"><a href="{{ url_for('forgot_password') }}">Quên mật khẩu?</a></p>{% endif %}
+    {% if mode == 'login' %}
+    <div class="demo-login-box">
+      <div class="demo-login-title"><span>⚡</span><b>Tài khoản Demo (Bấm đăng nhập ngay):</b></div>
+      <div class="demo-buttons">
+        <button type="button" class="btn btn-secondary btn-small demo-fill-btn" data-email="khach@sportvlu.vn" data-pass="12345678">🏸 Khách: khach@sportvlu.vn</button>
+        <button type="button" class="btn btn-secondary btn-small demo-fill-btn" data-email="chusan@sportvlu.vn" data-pass="12345678">🏟️ Chủ sân: chusan@sportvlu.vn</button>
+      </div>
+    </div>
+    <p class="auth-switch"><a href="{{ url_for('forgot_password') }}">Quên mật khẩu?</a></p>
+    {% endif %}
     <p class="auth-footnote">Không chia sẻ mật khẩu với người khác.</p>
   </div></section>
 </main>
+{% endblock %}
+{% block scripts %}
+{% if mode == 'login' %}
+<script>
+  document.querySelectorAll('.demo-fill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const emailInput = document.querySelector('input[name="email"]');
+      const passInput = document.querySelector('input[name="password"]');
+      if (emailInput && passInput) {
+        emailInput.value = btn.dataset.email;
+        passInput.value = btn.dataset.pass;
+        const form = emailInput.closest('form');
+        if (form) {
+          if (form.requestSubmit) form.requestSubmit();
+          else form.submit();
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}

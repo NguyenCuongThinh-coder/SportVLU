@@ -116,8 +116,24 @@ def init_db():
         c.execute('CREATE INDEX IF NOT EXISTS idx_password_reset_user ON password_reset_tokens(user_id,expires_at)')
         count=c.execute('SELECT COUNT(*) FROM courts').fetchone()[0]
         seed_demo_courts = not IS_PRODUCTION or os.environ.get('SPORTSLOT_SEED_DEMO') == '1'
-        if count==0 and seed_demo_courts:
-            c.executemany('INSERT INTO courts(name,sport,area,price,lat,lng,description) VALUES(?,?,?,?,?,?,?)',SEED_COURTS)
+        if seed_demo_courts:
+            owner_row = c.execute("SELECT id FROM users WHERE email='chusan@sportvlu.vn'").fetchone()
+            if not owner_row:
+                owner_cur = c.execute("INSERT INTO users(name,email,phone,password_hash,role) VALUES(?,?,?,?,?)",
+                                      ('Chủ Sân Demo', 'chusan@sportvlu.vn', '0987654321', generate_password_hash('12345678'), 'owner'))
+                demo_owner_id = owner_cur.lastrowid
+            else:
+                demo_owner_id = owner_row['id']
+
+            if not c.execute("SELECT id FROM users WHERE email='khach@sportvlu.vn'").fetchone():
+                c.execute("INSERT INTO users(name,email,phone,password_hash,role) VALUES(?,?,?,?,?)",
+                          ('Khách Hàng Demo', 'khach@sportvlu.vn', '0901234567', generate_password_hash('12345678'), 'player'))
+
+            if count==0:
+                c.executemany('INSERT INTO courts(name,sport,area,price,lat,lng,description,owner_id) VALUES(?,?,?,?,?,?,?,?)',
+                              [row + (demo_owner_id,) for row in SEED_COURTS])
+            else:
+                c.execute('UPDATE courts SET owner_id=? WHERE owner_id IS NULL', (demo_owner_id,))
 
 def current_user():
     if 'user_id' not in session: return None
